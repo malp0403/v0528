@@ -29,6 +29,7 @@ namespace v0528
             services.AddDbContext<DataContext>(options => options.UseSqlServer(connectString));
 
             services.AddControllers();
+            services.AddCors();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -42,6 +43,8 @@ namespace v0528
             app.UseHttpsRedirection();
 
             app.UseRouting();
+
+            app.UseCors(x=>x.AllowAnyHeader().AllowAnyMethod().WithOrigins("https://localhost:4200"));
 
             app.UseAuthorization();
 
