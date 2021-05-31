@@ -1,5 +1,6 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ToastrService } from 'ngx-toastr';
 import { User } from '../models/user';
 import { AccountService } from '../services/account.service';
 
@@ -13,7 +14,7 @@ export class RegisterComponent implements OnInit {
   @Output() cancaleRegister = new EventEmitter();
   model: any = {};
   registerForm: FormGroup;
-  constructor(private fb: FormBuilder, private accountService: AccountService) { }
+  constructor(private fb: FormBuilder, private accountService: AccountService,private toastr:ToastrService) { }
 
   ngOnInit(): void {
     this.registerForm = this.fb.group({
@@ -32,6 +33,7 @@ export class RegisterComponent implements OnInit {
       this.cancel();
     },error=>{
       console.log(error);
+      this.toastr.error(error.error);
     });
   }
 
