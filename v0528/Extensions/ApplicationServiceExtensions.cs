@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using v0528.Data;
+using v0528.Helpers;
 using v0528.Interface;
 using v0528.Services;
 
@@ -16,6 +17,9 @@ namespace v0528.Extensions
         public static IServiceCollection AddApplicationServices(this IServiceCollection services, IConfiguration config) 
         {
             services.AddScoped<ITokenService, TokenService>();
+            services.AddScoped<IUserRepository, UserRepository>();
+            services.AddAutoMapper(typeof(AutoMapperProfiles).Assembly);
+
             var connectString = config.GetConnectionString("DbCon");
             services.AddDbContext<DataContext>(options => options.UseSqlServer(connectString));
             return services;
