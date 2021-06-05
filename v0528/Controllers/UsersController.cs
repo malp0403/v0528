@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
@@ -44,5 +45,22 @@ namespace v0528.Controllers
             //var userModel = _mapper.Map<MemberModel>(user);
             //return userModel;
         }
+
+        [Authorize]
+        [HttpPost]
+        [Route("[action]")]
+        public async Task<ActionResult> UpdateUser([FromBody]MemberUpdateModel memberUpdateDto)
+        {
+            var username = User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var user = await _userRepository.GetUserByUsernameAsync(username);
+
+            _mapper.Map(memberUpdateDto, user);
+            _userRepository.Update(user);
+
+            if (await _userRepository.SaveAllAsync()) return NoContent();
+            return BadRequest("failed to update user");
+        }
+
+
     }
 }
