@@ -54,7 +54,9 @@ namespace v0528.Controllers
         [Route("[action]")]
         public async Task<ActionResult<UserModel>> Login(LoginModel loginModel)
         {
-            var user = await _context.Users.SingleOrDefaultAsync(x => x.UserName == loginModel.Username);
+            var user = await _context.Users
+                .Include(x=>x.Photos)
+                .SingleOrDefaultAsync(x => x.UserName == loginModel.Username);
             if (user == null) return Unauthorized("Invalid username");
 
             using var hmac = new HMACSHA512(user.PasswordSalt);
@@ -69,7 +71,8 @@ namespace v0528.Controllers
             return new UserModel
             {
                 Username = user.UserName,
-                Token = _tokenService.CreateToken(user)
+                Token = _tokenService.CreateToken(user),
+                PhotoUrl = user.Photos.FirstOrDefault(x=>x.IsMain)?.Url
             };
         }
 
