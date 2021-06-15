@@ -18,6 +18,7 @@ namespace v0528.Helpers
                 .ForMember(dest=>dest.Age,opt =>opt.MapFrom(src=>src.DateOfBirth.CalculateAge())) ;
             CreateMap<Photo, PhotoModel>();
             CreateMap<MemberUpdateModel, AppUser>();
+            CreateMap<RegisterModel, AppUser>();
         }
     }
 }

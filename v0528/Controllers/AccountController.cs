@@ -4,6 +4,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -18,11 +19,13 @@ namespace v0528.Controllers
     {
         private readonly DataContext _context;
         private readonly ITokenService _tokenService;
+        private readonly IMapper _mapper;
 
-        public AccountController(DataContext context,ITokenService tokenService)
+        public AccountController(DataContext context, ITokenService tokenService, IMapper mapper)
         {
             _context = context;
             _tokenService = tokenService;
+            _mapper = mapper;
         }
 
         [HttpPost]
@@ -34,20 +37,23 @@ namespace v0528.Controllers
                 return BadRequest("Username is taken");
             }
 
+            var user = _mapper.Map<AppUser>(registerModel);
+
             using var hmac = new HMACSHA512();
-            var user = new AppUser
-            {
-                UserName = registerModel.Username.ToLower(),
-                PasswordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(registerModel.Password)),
-                PasswordSalt = hmac.Key
-            };
+
+            user.UserName = registerModel.Username.ToLower();
+            user.PasswordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(registerModel.Password));
+            user.PasswordSalt = hmac.Key;
+
 
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
-            return new UserModel {
+            return new UserModel
+            {
                 Username = user.UserName,
-                Token = _tokenService.CreateToken(user)
+                Token = _tokenService.CreateToken(user),
+                KnownAs = user.KnownAs
             };
         }
         [HttpPost]
@@ -55,7 +61,7 @@ namespace v0528.Controllers
         public async Task<ActionResult<UserModel>> Login(LoginModel loginModel)
         {
             var user = await _context.Users
-                .Include(x=>x.Photos)
+                .Include(x => x.Photos)
                 .SingleOrDefaultAsync(x => x.UserName == loginModel.Username);
             if (user == null) return Unauthorized("Invalid username");
 
@@ -72,7 +78,8 @@ namespace v0528.Controllers
             {
                 Username = user.UserName,
                 Token = _tokenService.CreateToken(user),
-                PhotoUrl = user.Photos.FirstOrDefault(x=>x.IsMain)?.Url
+                PhotoUrl = user.Photos.FirstOrDefault(x => x.IsMain)?.Url,
+                KnownAs = user.KnownAs
             };
         }
 

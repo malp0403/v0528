@@ -1,0 +1,10 @@
+<div class="form-group">
+  <input 
+  type={{type}} 
+  [class.is-invalid]='ngControl.touched && ngControl.invalid'
+   class="form-control"
+[formControl]="ngControl.control" placeholder={{label}}>
+  <div class="invalid-feedback" *ngFor="let item of messages | keyvalue">
+    <span *ngIf="ngControl.hasError(item.key)">{{item.value}}</span>
+  </div>
+</div>
