@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 using v0528.Data;
 using v0528.Entities;
 using v0528.Extensions;
+using v0528.Helpers;
 using v0528.Interface;
 using v0528.Models;
 
@@ -23,7 +24,7 @@ namespace v0528.Controllers
         private readonly IMapper _mapper;
         private readonly IPhotoService _photoService;
 
-        public UsersController(IUserRepository userRepository,IMapper mapper,IPhotoService photoService)
+        public UsersController(IUserRepository userRepository, IMapper mapper, IPhotoService photoService)
         {
             _userRepository = userRepository;
             _mapper = mapper;
@@ -32,15 +33,22 @@ namespace v0528.Controllers
         [AllowAnonymous]
         [HttpGet]
         [Route("[action]")]
-        public async Task<ActionResult<IEnumerable<MemberModel>>> GetUsers()
+        public async Task<ActionResult<IEnumerable<MemberModel>>> GetUsers([FromQuery]UserParams userParams)
         {
-            var users = await _userRepository.GetMembersAsync();
+            var user = await _userRepository.GetUserByUsernameAsync(User.GetUsername());
+            userParams.CurrentUsername = user.UserName;
+            if (string.IsNullOrEmpty(userParams.Gender))
+            {
+                userParams.Gender = user.Gender == "male" ? "female" : "male";
+            }
+            var users = await _userRepository.GetMembersAsync(userParams);
+            Response.AddPaginationHeader(users.CurrentPage, users.PageSize, users.TotalCount, users.TotalPages);
             return Ok(users);
         }
 
         [Authorize]
         [HttpGet]
-        [Route("[action]/{username}",Name ="GetUser")]
+        [Route("[action]/{username}", Name = "GetUser")]
         public async Task<ActionResult<MemberModel>> GetUser(string username)
         {
             return await _userRepository.GetMemberAsync(username);
@@ -85,9 +93,9 @@ namespace v0528.Controllers
             };
 
             user.Photos.Add(photo);
-            if(await _userRepository.SaveAllAsync())
+            if (await _userRepository.SaveAllAsync())
             {
-                return CreatedAtRoute("GetUser",new { username = user.UserName}, _mapper.Map<PhotoModel>(photo));
+                return CreatedAtRoute("GetUser", new { username = user.UserName }, _mapper.Map<PhotoModel>(photo));
             }
             return BadRequest("Photo save unsuccessfully");
 
@@ -105,7 +113,7 @@ namespace v0528.Controllers
             if (photo.IsMain) return BadRequest("it is already your main photo");
 
             var currentMain = user.Photos.FirstOrDefault(x => x.IsMain);
-            if(currentMain != null)
+            if (currentMain != null)
             {
                 currentMain.IsMain = false;
             }
@@ -133,7 +141,7 @@ namespace v0528.Controllers
             if (photo.PublicId != null)
             {
                 var result = await _photoService.DeletePhotoAsync(photo.PublicId);
-                if(result.Error != null)
+                if (result.Error != null)
                 {
                     return BadRequest(result.Error.Message);
                 }
