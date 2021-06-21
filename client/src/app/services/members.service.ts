@@ -83,6 +83,18 @@ export class MembersService {
     return this.http.post(this.baseUrl + 'users/DeletePhoto/' + photoId, {});
   }
 
+  addLike(username:string){
+    return this.http.post(this.baseUrl+'likes/AddLike/'+username,{});
+  }
+
+  getLikes(predicate:string,pageNumber:number,pageSize:number){
+    let params = this.getPaginationHeaders(pageNumber,pageSize);
+    params = params.append('predicate',predicate);
+
+    return this.getPaginatedResult<Partial<Member[]>>(this.baseUrl+'likes/GetUserLikes',params);
+
+    // return this.http.get<Partial<Member[]>>(this.baseUrl+'likes/GetUserLikes?predicate='+predicate);
+  }
 
 
   private getPaginatedResult<T>(url, params) {
@@ -105,4 +117,5 @@ export class MembersService {
     params = params.append('pageSize', pageSize.toString());
     return params;
   }
+
 }
