@@ -22,6 +22,9 @@ namespace v0528.Extensions
             services.AddScoped<IPhotoService, PhotoService>();
             services.AddScoped<LogUserActivity>();
             services.AddScoped<ILikesRespository, LikesRepostiory>();
+            services.AddScoped<IMessageRepository, MessageRepository>();
+
+
             services.AddAutoMapper(typeof(AutoMapperProfiles).Assembly);
             var connectString = config.GetConnectionString("DbCon");
             services.AddDbContext<DataContext>(options => options.UseSqlServer(connectString));
